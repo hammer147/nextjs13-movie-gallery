@@ -1,0 +1,49 @@
+import Image from 'next/image'
+import { TMovie } from 'typings'
+
+export async function generateStaticParams() {
+  const data = await fetch(
+    `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_API_KEY}`
+  )
+  const res = await data.json() as { results: TMovie[] }
+
+  return res.results.map(movie => ({
+    movieId: movie.id.toString()
+  }))
+}
+
+export default async function MovieDetail({
+  params: { movieId }
+}: {
+  params: { movieId: string }
+}) {
+  const imagePath = 'https://image.tmdb.org/t/p/original'
+  const data = await fetch(
+    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.TMDB_API_KEY}`
+  )
+  const res = await data.json() as TMovie
+
+  return (
+    <div>
+      <div className=''>
+        <h2 className='text-4xl'>{res.title}</h2>
+        <h1 className='text-lg '>{res.release_date}</h1>
+        <h2>Runtime: {res.runtime} minutes</h2>
+        <h2 className='my-2 inline-block rounded-lg bg-green-600 py-2 px-4 text-sm'>
+          {res.status}
+        </h2>
+        <Image
+          className='my-12 w-full'
+          src={imagePath + res.backdrop_path}
+          alt={res.title}
+          width={1000}
+          height={1000}
+          priority
+        />
+      </div>
+      <div className='my-4'>
+        <p className='text-lg'>{res.overview}</p>
+      </div>
+    </div>
+  )
+}
